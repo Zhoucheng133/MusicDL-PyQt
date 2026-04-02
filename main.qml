@@ -47,6 +47,13 @@ ApplicationWindow {
         }
     }
 
+    Connections {
+        target: core
+        // 监听 listChanged 信号
+        function onListChanged() {
+            loading = false // 收到列表更新信号后，停止转圈
+        }
+    }
 
     ColumnLayout {
         anchors.fill: parent
@@ -151,6 +158,10 @@ ApplicationWindow {
             visible: core.searchResult.length === 0
             horizontalAlignment: Text.AlignHCenter
             Layout.alignment: Qt.AlignHCenter
+        }
+        Repeater {
+            model: core.searchResult
+            delegate: Label { text: modelData['search']['ar'][0]['name'] }
         }
 
         Item { Layout.fillHeight: true }

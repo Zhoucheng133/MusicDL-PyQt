@@ -1,10 +1,13 @@
+import json
 import os
 import sys
+import threading
 
 from PyQt6 import QtCore
 from PyQt6.QtCore import QUrl, QObject, pyqtSlot, pyqtSignal
 from PyQt6.QtGui import QGuiApplication
 from PyQt6.QtQml import QQmlApplicationEngine
+from musicdl import musicdl
 
 os.environ["QT_QUICK_CONTROLS_STYLE"] = "Material"
 
@@ -30,8 +33,34 @@ class Core(QObject):
 
     @pyqtSlot(str, str)
     def search(self, keyword, server):
+        self.list=[]
+        # 测试
         print(f"正在搜索: {keyword}\n使用服务: {server}")
-        self.list=["1", "2", "3"]
+        # 搜索
+        thread = threading.Thread(target=self.do_search_test, args=(keyword, server))
+        thread.start()
+
+    # 【测试代码】
+    def do_search_test(self, _, __):
+        search_results = {}
+        with open('test/music.json', 'r', encoding='utf-8') as f:
+            search_results = json.load(f)
+
+        local_list = []
+        for item in search_results:
+            local_list.append(item)
+        self.list = local_list
+        self.listChanged.emit()
+
+    def do_search(self, keyword, server):
+        client = musicdl.MusicClient()
+        client.music_sources = [server]
+        search_results = client.search(keyword)
+
+        local_list = []
+        for item in search_results[server]:
+            local_list.append(item['raw_data'])
+        self.list = local_list
         self.listChanged.emit()
 
 
