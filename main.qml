@@ -32,7 +32,7 @@ ApplicationWindow {
         }
     }
     function searchHanlder() {
-        if (searchInput.length == 0) {
+        if (searchInput.text.length == 0) {
             errDialog.dialogTitle = "无法搜索"
             errDialog.dialogBody = "输入关键词不能为空"
             errDialog.open()
