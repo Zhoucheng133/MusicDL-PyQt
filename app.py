@@ -25,10 +25,11 @@ class Core(QObject):
     def __init__(self):
         super().__init__()
         self.list=[]
-        # 【测试代码】
-        # self.do_search_test("x", "x")
+        self.data_ready.connect(self.on_search_ok)
 
     listChanged = pyqtSignal()
+    searchError = pyqtSignal(str)
+    data_ready = pyqtSignal(list)
 
     @QtCore.pyqtProperty(list, notify=listChanged)
     def searchResult(self):
@@ -43,32 +44,33 @@ class Core(QObject):
         thread = threading.Thread(target=self.do_search, args=(keyword, server))
         thread.start()
 
-    # 【测试代码】
-    def do_search_test(self, _, __):
-        search_results = {}
-        with open('test/music.json', 'r', encoding='utf-8') as f:
-            search_results = json.load(f)
-
-        local_list = []
-        for item in search_results:
-            local_list.append(item)
-        self.list = local_list
-        self.listChanged.emit()
-
     def do_search(self, keyword, server):
-        client = musicdl.MusicClient()
-        client.music_sources = [server]
-        search_results = client.search(keyword)
+        try:
+            client = musicdl.MusicClient()
+            client.music_sources = [server]
+            client.LOSSLESS_QUALITY_DEFINITIONS
+            search_results = client.search(keyword)
 
-        local_list = []
-        for item in search_results[server]:
-            local_list.append(item['raw_data'])
-        self.list = local_list
+            local_list = []
+            for item in search_results[server]:
+                local_list.append({
+                    "name": item['song_name'],
+                    "artist": item['singers'],
+                    "url": item['download_url'],
+                })
+            self.list = local_list
+            self.listChanged.emit()
+        except Exception as e:
+            self.searchError.emit(str(e))
+
+    @pyqtSlot(list)
+    def on_search_ok(self, data):
+        self.list = data
         self.listChanged.emit()
 
     @pyqtSlot(int)
     def download(self, index):
-        webbrowser.open(self.list[index]['download']['data']['url'])
+        webbrowser.open(self.list[index]['url'])
 
 
 if __name__ == "__main__":

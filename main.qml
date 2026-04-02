@@ -53,6 +53,13 @@ ApplicationWindow {
         function onListChanged() {
             loading = false // 收到列表更新信号后，停止转圈
         }
+
+        function onSearchError(msg){
+            loading = false
+            errDialog.dialogTitle = "错误"
+            errDialog.dialogBody = msg
+            errDialog.open()
+        }
     }
 
     ColumnLayout {
@@ -182,7 +189,7 @@ ApplicationWindow {
                     color: "transparent"
 
                     Label {
-                        text: modelData['search']['name']
+                        text: modelData['name']
                         anchors.centerIn: parent
                         width: parent.width * 0.9
                         horizontalAlignment: Text.AlignHCenter
@@ -196,7 +203,7 @@ ApplicationWindow {
                     color: "transparent"
 
                     Label {
-                        text: modelData['search']['ar'][0]['name']
+                        text: modelData['artist']
                         anchors.centerIn: parent
                         width: parent.width * 0.9
                         horizontalAlignment: Text.AlignHCenter
