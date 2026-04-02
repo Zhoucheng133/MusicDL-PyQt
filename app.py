@@ -1,7 +1,8 @@
 import os
 import sys
 
-from PyQt6.QtCore import QUrl, QObject, pyqtSlot
+from PyQt6 import QtCore
+from PyQt6.QtCore import QUrl, QObject, pyqtSlot, pyqtSignal
 from PyQt6.QtGui import QGuiApplication
 from PyQt6.QtQml import QQmlApplicationEngine
 
@@ -17,9 +18,21 @@ def get_qml_path(file_name):
     return os.path.join(base_path, file_name)
 
 class Core(QObject):
+    def __init__(self):
+        super().__init__()
+        self.list=[]
+
+    listChanged = pyqtSignal()
+
+    @QtCore.pyqtProperty(list, notify=listChanged)
+    def searchResult(self):
+        return self.list
+
     @pyqtSlot(str, str)
     def search(self, keyword, server):
         print(f"正在搜索: {keyword}\n使用服务: {server}")
+        self.list=["1", "2", "3"]
+        self.listChanged.emit()
 
 
 if __name__ == "__main__":

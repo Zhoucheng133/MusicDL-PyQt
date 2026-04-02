@@ -14,6 +14,8 @@ ApplicationWindow {
     Material.primary: Material.Teal
     Material.accent: Material.Teal
 
+    property bool loading: false;
+
     Dialog {
         id: errDialog
 
@@ -32,11 +34,15 @@ ApplicationWindow {
         }
     }
     function searchHanlder() {
+        if(loading){
+            return
+        }
         if (searchInput.text.length == 0) {
             errDialog.dialogTitle = "无法搜索"
             errDialog.dialogBody = "输入关键词不能为空"
             errDialog.open()
         } else {
+            loading=true
             core.search(searchInput.text, comboBox.currentText)
         }
     }
@@ -74,6 +80,7 @@ ApplicationWindow {
             }
 
             Button {
+                enabled: !loading
                 text: "搜索"
                 Layout.preferredHeight: 50
                 highlighted: true
@@ -137,7 +144,14 @@ ApplicationWindow {
             }
         }
 
-
+        Label {
+            Layout.fillWidth: true
+            text: "输入关键词搜索"
+            color: "gray"
+            visible: core.searchResult.length === 0
+            horizontalAlignment: Text.AlignHCenter
+            Layout.alignment: Qt.AlignHCenter
+        }
 
         Item { Layout.fillHeight: true }
     }
