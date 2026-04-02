@@ -4,43 +4,140 @@ import QtQuick.Layouts
 
 ApplicationWindow {
     visible: true
-    width: 400
+    width: 600
     height: 500
-    title: "Fluent UI Example"
+    minimumWidth: width
+    maximumWidth: width
+    minimumHeight: height
+    maximumHeight: height
+
+    Material.primary: Material.Teal
+    Material.accent: Material.Teal
+
+    Dialog {
+        id: errDialog
+
+        property string dialogTitle: ""
+        property string dialogBody: ""
+
+        title: dialogTitle
+        width: 400
+        anchors.centerIn: parent
+        modal: true
+        standardButtons: Dialog.Ok
+
+        Label {
+            text: errDialog.dialogBody
+            padding: 20
+        }
+    }
+
+    function searchHanlder(){
+        if(searchInput.length==0){
+            errDialog.dialogTitle = "无法搜索"
+            errDialog.dialogBody = "输入关键词不能为空"
+            errDialog.open()
+        }
+    }
+
 
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 20
         spacing: 15
 
-        Text {
-            text: "设置"
-            font.pixelSize: 28
-            font.weight: Font.DemiBold
-            Layout.alignment: Qt.AlignLeft
-        }
-
-        RowLayout {
+        RowLayout{
             Layout.fillWidth: true
-            Text { 
-                text: "开启深色模式"
-                Layout.fillWidth: true 
+            spacing: 15
+
+            ComboBox {
+                id: comboBox
+                Layout.preferredHeight: 40
+                Layout.preferredWidth: 200
+                model: [
+                    "NeteaseMusicClient",
+                    "MiguMusicClient",
+                    "QQMusicClient",
+                    "KuwoMusicClient",
+                    "QianqianMusicClient"
+                ]
+             }
+
+            TextField {
+                id: searchInput
+                Layout.fillWidth: true
+                Layout.preferredHeight: 40
+                onAccepted: {
+                    searchHanlder()
+                }
             }
-            Switch {
-                checked: true
-                onToggled: console.log("Switch state:", checked)
+
+            Button {
+                text: "搜索"
+                Layout.preferredHeight: 50
+                highlighted: true
+                onClicked: {
+                    searchHanlder()
+                }
             }
         }
 
-        Button {
-            text: "确认提交"
-            highlighted: true // Fluent 风格的高亮色
+        RowLayout{
+            Layout.preferredHeight: 40
             Layout.fillWidth: true
-            onClicked: {
-                // 执行逻辑
+            spacing: 5
+
+            Rectangle {
+                Layout.preferredHeight: parent.height
+                Layout.preferredWidth: 40
+                color: Material.primary
+
+                Label {
+                    text: "#"
+                    anchors.centerIn: parent
+                    color: "white"
+                }
+            }
+
+            Rectangle {
+                Layout.preferredHeight: parent.height
+                Layout.fillWidth: true
+                color: Material.primary
+
+                Label {
+                    text: "标题"
+                    anchors.centerIn: parent
+                    color: "white"
+                }
+            }
+
+            Rectangle {
+                Layout.preferredHeight: parent.height
+                Layout.preferredWidth: 150
+                color: Material.primary
+
+                Label {
+                    text: "艺人"
+                    anchors.centerIn: parent
+                    color: "white"
+                }
+            }
+
+            Rectangle {
+                Layout.preferredHeight: parent.height
+                Layout.preferredWidth: 50
+                color: Material.primary
+
+                Label {
+                    text: "操作"
+                    anchors.centerIn: parent
+                    color: "white"
+                }
             }
         }
 
-        Item { Layout.fillHeight: true } // 类似 Spacer()
+
+
+        Item { Layout.fillHeight: true }
     }
 }
