@@ -140,7 +140,7 @@ ApplicationWindow {
 
             Rectangle {
                 Layout.preferredHeight: parent.height
-                Layout.preferredWidth: 50
+                Layout.preferredWidth: 70
                 color: Material.primary
 
                 Label {
@@ -161,7 +161,64 @@ ApplicationWindow {
         }
         Repeater {
             model: core.searchResult
-            delegate: Label { text: modelData['search']['ar'][0]['name'] }
+            delegate: RowLayout{
+                Layout.preferredHeight: 45
+                Layout.fillWidth: true
+
+                Rectangle {
+                    Layout.preferredHeight: parent.height
+                    Layout.preferredWidth: 40
+                    color: "transparent"
+
+                    Label {
+                        text: index+1
+                        anchors.centerIn: parent
+                    }
+                }
+
+                Rectangle {
+                    Layout.preferredHeight: parent.height
+                    Layout.fillWidth: true
+                    color: "transparent"
+
+                    Label {
+                        text: modelData['search']['name']
+                        anchors.centerIn: parent
+                        width: parent.width * 0.9
+                        horizontalAlignment: Text.AlignHCenter
+                        elide: Text.ElideRight
+                    }
+                }
+
+                Rectangle {
+                    Layout.preferredHeight: parent.height
+                    Layout.preferredWidth: 150
+                    color: "transparent"
+
+                    Label {
+                        text: modelData['search']['ar'][0]['name']
+                        anchors.centerIn: parent
+                        width: parent.width * 0.9
+                        horizontalAlignment: Text.AlignHCenter
+                        elide: Text.ElideRight
+                    }
+                }
+
+                Rectangle {
+                    Layout.preferredHeight: parent.height
+                    Layout.preferredWidth: 70
+                    color: "transparent"
+                    // color: "red"
+                    Button {
+                        Layout.fillWidth: true
+                        anchors.centerIn: parent
+                        height: parent.height
+                        text: "下载"
+                        flat: true
+                        onClicked: core.download(index)
+                    }
+                }
+            }
         }
 
         Item { Layout.fillHeight: true }

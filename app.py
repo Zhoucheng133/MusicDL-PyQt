@@ -8,6 +8,7 @@ from PyQt6.QtCore import QUrl, QObject, pyqtSlot, pyqtSignal
 from PyQt6.QtGui import QGuiApplication
 from PyQt6.QtQml import QQmlApplicationEngine
 from musicdl import musicdl
+import webbrowser
 
 os.environ["QT_QUICK_CONTROLS_STYLE"] = "Material"
 
@@ -24,6 +25,8 @@ class Core(QObject):
     def __init__(self):
         super().__init__()
         self.list=[]
+        # 【测试代码】
+        # self.do_search_test("x", "x")
 
     listChanged = pyqtSignal()
 
@@ -37,7 +40,7 @@ class Core(QObject):
         # 测试
         print(f"正在搜索: {keyword}\n使用服务: {server}")
         # 搜索
-        thread = threading.Thread(target=self.do_search_test, args=(keyword, server))
+        thread = threading.Thread(target=self.do_search, args=(keyword, server))
         thread.start()
 
     # 【测试代码】
@@ -62,6 +65,10 @@ class Core(QObject):
             local_list.append(item['raw_data'])
         self.list = local_list
         self.listChanged.emit()
+
+    @pyqtSlot(int)
+    def download(self, index):
+        webbrowser.open(self.list[index]['download']['data']['url'])
 
 
 if __name__ == "__main__":
