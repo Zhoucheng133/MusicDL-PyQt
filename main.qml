@@ -160,74 +160,110 @@ ApplicationWindow {
 
         Label {
             Layout.fillWidth: true
+            Layout.fillHeight: true
             text: "输入关键词搜索"
             color: "gray"
-            visible: core.searchResult.length === 0
+            visible: core.searchResult.length === 0 && !loading
             horizontalAlignment: Text.AlignHCenter
-            Layout.alignment: Qt.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+            Layout.bottomMargin: 20
         }
-        Repeater {
-            model: core.searchResult
-            delegate: RowLayout{
-                Layout.preferredHeight: 45
+
+        ColumnLayout {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            visible: loading
+
+            Item { Layout.fillHeight: true }
+
+            BusyIndicator {
                 Layout.fillWidth: true
+                id: busyIndicator
+                running: true
+                Layout.alignment: Qt.AlignHCenter
+                Layout.preferredWidth: 40
+                Layout.preferredHeight: 40
+            }
 
-                Rectangle {
-                    Layout.preferredHeight: parent.height
-                    Layout.preferredWidth: 40
-                    color: "transparent"
+            Item { Layout.fillHeight: true }
+        }
 
-                    Label {
-                        text: index+1
-                        anchors.centerIn: parent
-                    }
-                }
-
-                Rectangle {
-                    Layout.preferredHeight: parent.height
-                    Layout.fillWidth: true
-                    color: "transparent"
-
-                    Label {
-                        text: modelData['name']
-                        anchors.centerIn: parent
-                        width: parent.width * 0.9
-                        horizontalAlignment: Text.AlignHCenter
-                        elide: Text.ElideRight
-                    }
-                }
-
-                Rectangle {
-                    Layout.preferredHeight: parent.height
-                    Layout.preferredWidth: 150
-                    color: "transparent"
-
-                    Label {
-                        text: modelData['artist']
-                        anchors.centerIn: parent
-                        width: parent.width * 0.9
-                        horizontalAlignment: Text.AlignHCenter
-                        elide: Text.ElideRight
-                    }
-                }
-
-                Rectangle {
-                    Layout.preferredHeight: parent.height
-                    Layout.preferredWidth: 70
-                    color: "transparent"
-                    // color: "red"
-                    Button {
+        ScrollView{
+            id: scrollList
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            visible: !loading
+            clip: true
+            ColumnLayout {
+                width: scrollList.availableWidth
+                Layout.fillWidth: true
+                Repeater {
+                    model: core.searchResult
+                    visible: !loading
+                    delegate: RowLayout{
+                        Layout.preferredHeight: 45
                         Layout.fillWidth: true
-                        anchors.centerIn: parent
-                        height: parent.height
-                        text: "下载"
-                        flat: true
-                        onClicked: core.download(index)
+
+                        Rectangle {
+                            Layout.preferredHeight: parent.height
+                            Layout.preferredWidth: 40
+                            color: "transparent"
+
+                            Label {
+                                text: index+1
+                                anchors.centerIn: parent
+                            }
+                        }
+
+                        Rectangle {
+                            Layout.preferredHeight: parent.height
+                            Layout.fillWidth: true
+                            color: "transparent"
+
+                            Label {
+                                text: modelData['name']
+                                anchors.centerIn: parent
+                                width: parent.width * 0.9
+                                horizontalAlignment: Text.AlignHCenter
+                                elide: Text.ElideRight
+                            }
+                        }
+
+                        Rectangle {
+                            Layout.preferredHeight: parent.height
+                            Layout.preferredWidth: 150
+                            color: "transparent"
+
+                            Label {
+                                text: modelData['artist']
+                                anchors.centerIn: parent
+                                width: parent.width * 0.9
+                                horizontalAlignment: Text.AlignHCenter
+                                elide: Text.ElideRight
+                            }
+                        }
+
+                        Rectangle {
+                            Layout.preferredHeight: parent.height
+                            Layout.preferredWidth: 70
+                            color: "transparent"
+                            // color: "red"
+                            Button {
+                                Layout.fillWidth: true
+                                anchors.centerIn: parent
+                                height: parent.height
+                                text: "下载"
+                                flat: true
+                                onClicked: core.download(index)
+                            }
+                        }
                     }
                 }
             }
         }
 
-        Item { Layout.fillHeight: true }
+        Item {
+            Layout.fillHeight: true
+        }
     }
 }
