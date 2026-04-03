@@ -49,7 +49,9 @@ app_bundle = BUNDLE(
     name='MusicDL.app',
     bundle_identifier='zhouc.musicdl_gui',
     info_plist={
+        'CFBundleShortVersionString': '0.0.1',
         'NSHighResolutionCapable': 'True',
         'LSBackgroundOnly': 'False',
+        'NSHumanReadableCopyright': 'Copyright © 2026 zhouc. All rights reserved.'
     },
 )
