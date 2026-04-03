@@ -34,6 +34,8 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    version='version_info.txt',
+    icon=['assets/icon.ico']
 )
 coll = COLLECT(
     exe,
@@ -47,6 +49,7 @@ coll = COLLECT(
 app_bundle = BUNDLE(
     coll,
     name='MusicDL.app',
+    icon='assets/icon.icns',
     bundle_identifier='zhouc.musicdl_gui',
     info_plist={
         'CFBundleShortVersionString': '0.0.1',
