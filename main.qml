@@ -11,6 +11,8 @@ ApplicationWindow {
     minimumHeight: height
     maximumHeight: height
 
+    title: "musicdl GUI"
+
     Material.primary: Material.Teal
     Material.accent: Material.Teal
 
