@@ -45,6 +45,30 @@ class Core(QObject):
         thread = threading.Thread(target=self.do_search, args=(keyword, server))
         thread.start()
 
+    # 测试代码
+    def do_search_test(self, keyword, server):
+        import time
+        time.sleep(2)
+        local_list = [
+            {
+                "name": "test1",
+                "artist": "test2",
+                "url": "https://music.163.com/song/media/outer/url?id=138654.mp3",
+            },
+            {
+                "name": "test3",
+                "artist": "test4",
+                "url": "https://music.163.com/song/media/outer/url?id=138654.mp3",
+            },
+            {
+                "name": "test5",
+                "artist": "test6",
+                "url": "https://music.163.com/song/media/outer/url?id=138654.mp3",
+            },
+        ]
+        self.list = local_list
+        self.listChanged.emit()
+
     def do_search(self, keyword, server):
         try:
             home_dir = Path.home()
