@@ -12,6 +12,14 @@
 
 ## 打包
 
+### Windows
+
 ```bash
-pyinstaller --clean app.spec
+pyinstaller --noconfirm --clean win.spec
+```
+
+### macOS
+
+```bash
+pyinstaller --noconfirm --clean mac.spec
 ```
