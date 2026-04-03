@@ -5,7 +5,7 @@ import threading
 
 from PyQt6 import QtCore
 from PyQt6.QtCore import QUrl, QObject, pyqtSlot, pyqtSignal
-from PyQt6.QtGui import QGuiApplication
+from PyQt6.QtGui import QGuiApplication, QIcon
 from PyQt6.QtQml import QQmlApplicationEngine
 from musicdl import musicdl
 import webbrowser
@@ -105,9 +105,14 @@ class Core(QObject):
     def download(self, index):
         webbrowser.open(self.list[index]['url'])
 
+def resource_path(relative_path):
+    base_path = getattr(sys, '_MEIPASS', os.path.abspath("."))
+    return os.path.join(base_path, relative_path)
 
 if __name__ == "__main__":
     app = QGuiApplication(sys.argv)
+    if sys.platform == 'win32':
+        app.setWindowIcon(QIcon(resource_path("assets/icon.ico")))
 
     core = Core()
     engine = QQmlApplicationEngine()
