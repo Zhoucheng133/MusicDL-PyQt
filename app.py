@@ -9,6 +9,7 @@ from PyQt6.QtGui import QGuiApplication
 from PyQt6.QtQml import QQmlApplicationEngine
 from musicdl import musicdl
 import webbrowser
+from pathlib import Path
 
 os.environ["QT_QUICK_CONTROLS_STYLE"] = "Material"
 
@@ -46,11 +47,19 @@ class Core(QObject):
 
     def do_search(self, keyword, server):
         try:
-            client = musicdl.MusicClient()
-            client.music_sources = [server]
-            client.LOSSLESS_QUALITY_DEFINITIONS
-            search_results = client.search(keyword)
+            home_dir = Path.home()
+            init_music_clients_cfg = dict()
+            init_music_clients_cfg['NeteaseMusicClient'] = {'work_dir': f'{home_dir}/musicdl/Netease'}
+            init_music_clients_cfg['QQMusicClient'] = {'work_dir': f'{home_dir}/musicdl/QQ'}
+            init_music_clients_cfg['MiguMusicClient'] = {'work_dir': f'{home_dir}/musicdl/migu'}
+            init_music_clients_cfg['KuwoMusicClient'] = {'work_dir': f'{home_dir}/musicdl/kuwo'}
+            init_music_clients_cfg['QianqianMusicClient'] = {'work_dir': f'{home_dir}/musicdl/qianqian'}
 
+            client = musicdl.MusicClient(
+                music_sources=[server],
+                init_music_clients_cfg=init_music_clients_cfg
+            )
+            search_results = client.search(keyword)
             local_list = []
             for item in search_results[server]:
                 local_list.append({
