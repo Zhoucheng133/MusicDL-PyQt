@@ -15,7 +15,7 @@ VSVersionInfo(
       StringTable(
         u'040904B0',
         [StringStruct(u'CompanyName', u'zhouc'),
-        StringStruct(u'FileDescription', u'musicdl GUI'),
+        StringStruct(u'FileDescription', u'MusicDL GUI'),
         StringStruct(u'FileVersion', u'0.0.1'),
         StringStruct(u'InternalName', u'musicdl_gui'),
         StringStruct(u'LegalCopyright', u'Copyright (c) 2026 zhouc. All rights reserved.'),
