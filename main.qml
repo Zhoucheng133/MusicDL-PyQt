@@ -19,6 +19,64 @@ ApplicationWindow {
     property bool loading: false;
 
     Dialog {
+        id: downloadDialog
+        anchors.centerIn: parent
+        width: 320
+        title: "下载中..."
+        modal: true
+        closePolicy: Popup.NoAutoClose
+
+        ColumnLayout {
+            width: parent.width
+            spacing: 15
+
+            Label {
+                text: "正在为您准备文件..."
+                Layout.fillWidth: true
+                elide: Text.ElideRight
+            }
+
+            ProgressBar {
+                id: progressBar
+                Layout.fillWidth: true
+                from: 0
+                to: 1
+                value: 0
+            }
+
+            RowLayout {
+                Layout.alignment: Qt.AlignRight
+                Button {
+                    text: "取消下载"
+                    onClicked: {
+                        core.cancel_download()
+                        downloadDialog.close()
+                    }
+                }
+            }
+        }
+    }
+
+    Connections {
+        target: core
+
+        function onShowProgressDialog(){
+            progressBar.value = 0
+            downloadDialog.open()
+        }
+
+        function onUpdateProgress(val){
+            progressBar.value = val
+        }
+
+        function onHideProgressDialog(msg){
+            downloadDialog.close()
+            // 这里可以加一个简单的 Toast 提示或者 Console
+            // console.log("下载状态通知:", msg)
+        }
+    }
+
+    Dialog {
         id: errDialog
 
         property string dialogTitle: ""

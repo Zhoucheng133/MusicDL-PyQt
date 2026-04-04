@@ -9,4 +9,5 @@ dependencies = [
     "pycryptodomex>=3.23.0",
     "pyinstaller==6.19.0",
     "pyqt6-stubs==20250824",
+    "qthread>=0.1.0",
 ]

@@ -1,14 +1,15 @@
-import json
 import os
 import sys
 import threading
 
+import requests
 from PyQt6 import QtCore
-from PyQt6.QtCore import QUrl, QObject, pyqtSlot, pyqtSignal
-from PyQt6.QtGui import QGuiApplication, QIcon
+from PyQt6.QtCore import QUrl, QObject, pyqtSlot, pyqtSignal, QThread
+from PyQt6.QtGui import QIcon
 from PyQt6.QtQml import QQmlApplicationEngine
 from musicdl import musicdl
-import webbrowser
+from PyQt6.QtWidgets import QFileDialog, QApplication
+# import webbrowser
 from pathlib import Path
 
 os.environ["QT_QUICK_CONTROLS_STYLE"] = "Material"
@@ -22,15 +23,55 @@ def get_qml_path(file_name):
 
     return os.path.join(base_path, file_name)
 
+
+class DownloadWorker(QThread):
+    progressChanged = pyqtSignal(float)
+    finished = pyqtSignal(bool, str)
+
+    def __init__(self, url, dest):
+        super().__init__()
+        self.url = url
+        self.dest = dest
+        self._is_cancelled = False
+
+    def cancel(self):
+        self._is_cancelled = True
+
+    def run(self):
+        try:
+            response = requests.get(self.url, stream=True, timeout=15)
+            total_size = int(response.headers.get('content-length', 0))
+
+            downloaded_size = 0
+            with open(self.dest, 'wb') as f:
+                for data in response.iter_content(chunk_size=8192):
+                    if self._is_cancelled:
+                        self.finished.emit(False, "下载已取消")
+                        return
+                    f.write(data)
+                    downloaded_size += len(data)
+                    if total_size > 0:
+                        self.progressChanged.emit(downloaded_size / total_size)
+
+            self.finished.emit(True, "下载成功")
+        except Exception as e:
+            self.finished.emit(False, f"下载出错: {str(e)}")
+
 class Core(QObject):
+    listChanged = pyqtSignal()
+    searchError = pyqtSignal(str)
+    data_ready = pyqtSignal(list)
+
+    showProgressDialog = pyqtSignal()
+    updateProgress = pyqtSignal(float)
+    hideProgressDialog = pyqtSignal(str)
+
     def __init__(self):
         super().__init__()
         self.list=[]
         self.data_ready.connect(self.on_search_ok)
 
-    listChanged = pyqtSignal()
-    searchError = pyqtSignal(str)
-    data_ready = pyqtSignal(list)
+        self.worker = None
 
     @QtCore.pyqtProperty(list, notify=listChanged)
     def searchResult(self):
@@ -105,14 +146,52 @@ class Core(QObject):
 
     @pyqtSlot(int)
     def download(self, index):
-        webbrowser.open(self.list[index]['url'])
+        item = self.list[index]
+        url = item['url']
+
+        ext = os.path.splitext(url.split('?')[0])[-1]
+        if not ext: ext = ".mp3"  # 默认兜底
+
+        default_name = f"{item['artist']}-{item['name']}{ext}"
+
+        file_path, _ = QFileDialog.getSaveFileName(
+            None,
+            "选择保存位置",
+            default_name,
+            f"Files (*{ext});;All Files (*)"
+        )
+
+        # 如果用户点击了取消，则不进行后续操作
+        if not file_path:
+            return
+
+        # 4. 显示进度条对话框
+        self.showProgressDialog.emit()
+
+        # 5. 启动线程下载
+        self.worker = DownloadWorker(url, file_path)
+        self.worker.progressChanged.connect(self.updateProgress.emit)
+        self.worker.finished.connect(self.on_finished)
+        self.worker.start()
+
+    @pyqtSlot()
+    def cancel_download(self):
+        if self.worker:
+            self.worker.cancel()
+
+    def on_finished(self, success, message):
+        self.hideProgressDialog.emit(message)
+        if self.worker:
+            self.worker.quit()
+            self.worker.wait()
+            self.worker = None
 
 def resource_path(relative_path):
     base_path = getattr(sys, '_MEIPASS', os.path.abspath("."))
     return os.path.join(base_path, relative_path)
 
 if __name__ == "__main__":
-    app = QGuiApplication(sys.argv)
+    app = QApplication(sys.argv)
     if sys.platform == 'win32':
         app.setWindowIcon(QIcon(resource_path("assets/icon.ico")))
 
