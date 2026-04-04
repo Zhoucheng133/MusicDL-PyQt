@@ -90,6 +90,8 @@ class Core(QObject):
                     "name": item['song_name'],
                     "artist": item['singers'],
                     "url": item['download_url'],
+                    "cover": item['cover_url'],
+                    "album": item['album'],
                 })
             self.list = local_list
             self.listChanged.emit()
