@@ -249,7 +249,6 @@ ApplicationWindow {
                             Layout.preferredHeight: parent.height
                             Layout.preferredWidth: 70
                             color: "transparent"
-                            // color: "red"
                             Button {
                                 Layout.fillWidth: true
                                 anchors.centerIn: parent
