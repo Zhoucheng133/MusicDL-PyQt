@@ -224,10 +224,12 @@ class Core(QObject):
             temp_output
         ]
         try:
+            CREATE_NO_WINDOW = 0x08000000
             process = await asyncio.create_subprocess_exec(
                 *cmd,
                 stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                stderr=asyncio.subprocess.PIPE,
+                creationflags=CREATE_NO_WINDOW
             )
             _, __ = await process.communicate()
 
