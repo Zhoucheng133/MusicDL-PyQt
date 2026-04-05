@@ -1,4 +1,6 @@
 import os
+import shutil
+import subprocess
 import sys
 import threading
 
@@ -65,6 +67,9 @@ class Core(QObject):
     showProgressDialog = pyqtSignal()
     updateProgress = pyqtSignal(float)
     hideProgressDialog = pyqtSignal(str)
+
+    index=0
+    savePath=""
 
     def __init__(self):
         super().__init__()
@@ -148,9 +153,10 @@ class Core(QObject):
     def download(self, index):
         item = self.list[index]
         url = item['url']
+        self.index = index
 
         ext = os.path.splitext(url.split('?')[0])[-1]
-        if not ext: ext = ".mp3"  # 默认兜底
+        if not ext: ext = ".mp3"
 
         default_name = f"{item['artist']}-{item['name']}{ext}"
 
@@ -164,6 +170,8 @@ class Core(QObject):
         # 如果用户点击了取消，则不进行后续操作
         if not file_path:
             return
+
+        self.savePath = file_path
 
         # 4. 显示进度条对话框
         self.showProgressDialog.emit()
@@ -185,6 +193,27 @@ class Core(QObject):
             self.worker.quit()
             self.worker.wait()
             self.worker = None
+            ffmpeg_exe = shutil.which("ffmpeg")
+            if ffmpeg_exe:
+                subprocess.run([
+                    'ffmpeg',
+                    '-i', self.savePath,
+                    '-i', self.list[self.index]['cover'],
+                    '-map', '0:a',
+                    '-map', '1:0',
+
+                    '-c:a', 'libmp3lame',
+                    '-b:a', '320k',
+                    '-metadata', f'title={self.list[self.index]["name"]}',
+                    '-metadata', f'artist={self.list[self.index]["artist"]}',
+                    '-metadata', f'album={self.list[self.index]["album"]}',
+
+                    '-id3v2_version', '3',
+                    '-metadata:s:v', 'title="Album cover"',
+                    '-metadata:s:v', 'comment="Cover (front)"',
+
+                    os.path.join(os.path.dirname(self.savePath), "output.mp3")
+                ], check=True)
 
 def resource_path(relative_path):
     base_path = getattr(sys, '_MEIPASS', os.path.abspath("."))
