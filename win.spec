@@ -8,7 +8,9 @@ a = Analysis(
         ('assets/icon.ico', 'assets')
     ],
     pathex=[],
-    binaries=[],
+    binaries=[
+        ('ffmpeg/win/ffmpeg.exe', 'ffmpeg/win')
+    ],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

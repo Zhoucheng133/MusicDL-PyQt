@@ -1,25 +1,23 @@
 import os
-import shutil
-import subprocess
 import sys
 import threading
 
 import asyncio
 import requests
+import platform
 from PyQt6 import QtCore
 from PyQt6.QtCore import QUrl, QObject, pyqtSlot, pyqtSignal, QThread
 from PyQt6.QtGui import QIcon
 from PyQt6.QtQml import QQmlApplicationEngine
 from musicdl import musicdl
 from PyQt6.QtWidgets import QFileDialog, QApplication
-# import webbrowser
 from pathlib import Path
 
 os.environ["QT_QUICK_CONTROLS_STYLE"] = "Material"
 
 def get_qml_path(file_name):
     if hasattr(sys, '_MEIPASS'):
-        base_path = sys._MEIPASS
+        base_path = sys._MEIPASS # type: ignore
     else:
         # 开发环境路径
         base_path = os.path.dirname(os.path.abspath(__file__))
@@ -79,7 +77,7 @@ class Core(QObject):
 
         self.worker = None
 
-    @QtCore.pyqtProperty(list, notify=listChanged)
+    @QtCore.pyqtProperty(list, notify=listChanged) # type: ignore
     def searchResult(self):
         return self.list
 
@@ -172,10 +170,8 @@ class Core(QObject):
 
         self.savePath = file_path
 
-        # 4. 显示进度条对话框
         self.showProgressDialog.emit()
 
-        # 5. 启动线程下载
         self.worker = DownloadWorker(url, file_path)
         self.worker.progressChanged.connect(self.updateProgress.emit)
         self.worker.finished.connect(self.on_finished)
@@ -185,6 +181,19 @@ class Core(QObject):
     def cancel_download(self):
         if self.worker:
             self.worker.cancel()
+
+    def get_ffmpeg_path(self):
+        if getattr(sys, 'frozen', False):
+            base_path = sys._MEIPASS # type: ignore
+        else:
+            base_path = os.path.dirname(os.path.abspath(__file__))
+        
+        if sys.platform == 'win32':
+            ffmpeg_bin = os.path.join(base_path, "ffmpeg", "win", "ffmpeg.exe")
+        elif sys.platform == 'darwin':
+            ffmpeg_bin = os.path.join(base_path, "ffmpeg", "mac", "ffmpeg")
+
+        return ffmpeg_bin
 
     async def audio_convert(self):
         current_item = self.list[self.index]
@@ -196,8 +205,10 @@ class Core(QObject):
         final_path = os.path.join(directory, new_name)
         temp_output = os.path.join(directory, "temp_processing.mp3")
 
+        ffmpeg_exe = self.get_ffmpeg_path()
+
         cmd = [
-            'ffmpeg', '-y',
+            ffmpeg_exe, '-y',
             '-i', self.savePath,
             '-i', current_item['cover'],
             '-map', '0:a',
@@ -213,18 +224,14 @@ class Core(QObject):
             temp_output
         ]
         try:
-            # 3. 异步启动子进程
             process = await asyncio.create_subprocess_exec(
                 *cmd,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE
             )
-            stdout, stderr = await process.communicate()
+            _, __ = await process.communicate()
 
             if process.returncode == 0:
-                # if os.path.exists(self.savePath):
-                #     os.remove(self.savePath)
-
                 if os.path.exists(final_path):
                     os.remove(final_path)
 
@@ -240,9 +247,7 @@ class Core(QObject):
             self.worker.quit()
             self.worker.wait()
             self.worker = None
-            ffmpeg_exe = shutil.which("ffmpeg")
-            if ffmpeg_exe:
-                asyncio.run(self.audio_convert())
+            asyncio.run(self.audio_convert())
 
 def resource_path(relative_path):
     base_path = getattr(sys, '_MEIPASS', os.path.abspath("."))
@@ -255,7 +260,7 @@ if __name__ == "__main__":
 
     core = Core()
     engine = QQmlApplicationEngine()
-    engine.rootContext().setContextProperty("core", core)
+    engine.rootContext().setContextProperty("core", core) # type: ignore
 
     target_qml = get_qml_path("main.qml")
     engine.load(QUrl.fromLocalFile(target_qml))

@@ -7,7 +7,9 @@ a = Analysis(
         ("main.qml", ".")
     ],
     pathex=[],
-    binaries=[],
+    binaries=[
+        ('ffmpeg/mac/ffmpeg', 'ffmpeg/mac')
+    ],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
