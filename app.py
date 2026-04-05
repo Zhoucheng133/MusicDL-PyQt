@@ -199,7 +199,7 @@ class Core(QObject):
         current_item = self.list[self.index]
         directory = os.path.dirname(self.savePath)
 
-        new_name = f"{current_item['name']}-{current_item['artist']}.mp3"
+        new_name = f"{current_item['artist']}-{current_item['name']}.mp3"
         new_name = "".join([c for c in new_name if c not in r'\/:*?"<>|'])
 
         final_path = os.path.join(directory, new_name)
