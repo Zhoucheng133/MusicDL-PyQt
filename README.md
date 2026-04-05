@@ -8,6 +8,14 @@
 
 这是一个基于[musicdl](https://github.com/CharlesPikachu/musicdl)的GUI程序，使用PyQT6开发
 
+## 功能
+
+✅ 自定义下载位置  
+✅ 自动编码下载的歌曲 (包括封面图片和meta信息)*  
+✅ 多个平台搜索
+
+\* 自动编码时以`{艺人名}-{歌曲名}.mp3`命名，如果初始文件就是mp3时则会替换原始文件
+
 ## 截图
 
 <img src="demo/demo.png" width="500px">
