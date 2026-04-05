@@ -222,8 +222,8 @@ class Core(QObject):
             stdout, stderr = await process.communicate()
 
             if process.returncode == 0:
-                if os.path.exists(self.savePath):
-                    os.remove(self.savePath)
+                # if os.path.exists(self.savePath):
+                #     os.remove(self.savePath)
 
                 if os.path.exists(final_path):
                     os.remove(final_path)
