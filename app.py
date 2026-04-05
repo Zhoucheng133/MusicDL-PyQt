@@ -4,6 +4,7 @@ import subprocess
 import sys
 import threading
 
+import asyncio
 import requests
 from PyQt6 import QtCore
 from PyQt6.QtCore import QUrl, QObject, pyqtSlot, pyqtSignal, QThread
@@ -85,8 +86,6 @@ class Core(QObject):
     @pyqtSlot(str, str)
     def search(self, keyword, server):
         self.list=[]
-        # 测试
-        print(f"正在搜索: {keyword}\n使用服务: {server}")
         # 搜索
         thread = threading.Thread(target=self.do_search, args=(keyword, server))
         thread.start()
@@ -187,6 +186,54 @@ class Core(QObject):
         if self.worker:
             self.worker.cancel()
 
+    async def audio_convert(self):
+        current_item = self.list[self.index]
+        directory = os.path.dirname(self.savePath)
+
+        new_name = f"{current_item['name']}-{current_item['artist']}.mp3"
+        new_name = "".join([c for c in new_name if c not in r'\/:*?"<>|'])
+
+        final_path = os.path.join(directory, new_name)
+        temp_output = os.path.join(directory, "temp_processing.mp3")
+
+        cmd = [
+            'ffmpeg', '-y',
+            '-i', self.savePath,
+            '-i', current_item['cover'],
+            '-map', '0:a',
+            '-map', '1:0',
+            '-c:a', 'libmp3lame',
+            '-b:a', '320k',
+            '-metadata', f"title={current_item['name']}",
+            '-metadata', f"artist={current_item['artist']}",
+            '-metadata', f"album={current_item['album']}",
+            '-id3v2_version', '3',
+            '-metadata:s:v', 'title=Album cover',
+            '-metadata:s:v', 'comment=Cover (front)',
+            temp_output
+        ]
+        try:
+            # 3. 异步启动子进程
+            process = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            stdout, stderr = await process.communicate()
+
+            if process.returncode == 0:
+                if os.path.exists(self.savePath):
+                    os.remove(self.savePath)
+
+                if os.path.exists(final_path):
+                    os.remove(final_path)
+
+                os.rename(temp_output, final_path)
+
+        except Exception as e:
+            if os.path.exists(temp_output):
+                os.remove(temp_output)
+
     def on_finished(self, success, message):
         self.hideProgressDialog.emit(message)
         if self.worker:
@@ -195,25 +242,7 @@ class Core(QObject):
             self.worker = None
             ffmpeg_exe = shutil.which("ffmpeg")
             if ffmpeg_exe:
-                subprocess.run([
-                    'ffmpeg',
-                    '-i', self.savePath,
-                    '-i', self.list[self.index]['cover'],
-                    '-map', '0:a',
-                    '-map', '1:0',
-
-                    '-c:a', 'libmp3lame',
-                    '-b:a', '320k',
-                    '-metadata', f'title={self.list[self.index]["name"]}',
-                    '-metadata', f'artist={self.list[self.index]["artist"]}',
-                    '-metadata', f'album={self.list[self.index]["album"]}',
-
-                    '-id3v2_version', '3',
-                    '-metadata:s:v', 'title="Album cover"',
-                    '-metadata:s:v', 'comment="Cover (front)"',
-
-                    os.path.join(os.path.dirname(self.savePath), "output.mp3")
-                ], check=True)
+                asyncio.run(self.audio_convert())
 
 def resource_path(relative_path):
     base_path = getattr(sys, '_MEIPASS', os.path.abspath("."))

@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    "asyncio>=4.0.0",
     "musicdl==2.10.2",
     "pycryptodomex>=3.23.0",
     "pyinstaller==6.19.0",
