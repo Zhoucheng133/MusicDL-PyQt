@@ -52,7 +52,7 @@ app_bundle = BUNDLE(
     icon='assets/icon.icns',
     bundle_identifier='zhouc.musicdl_gui',
     info_plist={
-        'CFBundleShortVersionString': '0.1.0',
+        'CFBundleShortVersionString': '0.2.0',
         'NSHighResolutionCapable': 'True',
         'LSBackgroundOnly': 'False',
         'NSHumanReadableCopyright': 'Copyright © 2026 zhouc. All rights reserved.'

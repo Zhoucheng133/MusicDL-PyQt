@@ -21,7 +21,7 @@ VSVersionInfo(
         StringStruct(u'LegalCopyright', u'Copyright (c) 2026 zhouc. All rights reserved.'),
         StringStruct(u'OriginalFilename', u'musicdl_gui.exe'),
         StringStruct(u'ProductName', u'musicdl_gui'),
-        StringStruct(u'ProductVersion', u'0.1.0')])
+        StringStruct(u'ProductVersion', u'0.2.0')])
       ]),
     VarFileInfo([VarStruct(u'Translation', [2052, 1200])])
   ]
