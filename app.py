@@ -195,7 +195,7 @@ class Core(QObject):
 
         return ffmpeg_bin
 
-    async def audio_convert(self):
+    async def audio_convert(self, message):
         current_item = self.list[self.index]
         directory = os.path.dirname(self.savePath)
 
@@ -241,13 +241,15 @@ class Core(QObject):
             if os.path.exists(temp_output):
                 os.remove(temp_output)
 
-    def on_finished(self, success, message):
         self.hideProgressDialog.emit(message)
+
+    def on_finished(self, success, message):
         if self.worker:
             self.worker.quit()
             self.worker.wait()
             self.worker = None
-            asyncio.run(self.audio_convert())
+            thread = threading.Thread(target=lambda: asyncio.run(self.audio_convert(message)), daemon=True)
+            thread.start()
 
 def resource_path(relative_path):
     base_path = getattr(sys, '_MEIPASS', os.path.abspath("."))
