@@ -10,7 +10,7 @@ from PyQt6.QtCore import QUrl, QObject, pyqtSlot, pyqtSignal, QThread
 from PyQt6.QtGui import QIcon
 from PyQt6.QtQml import QQmlApplicationEngine
 from musicdl import musicdl
-from PyQt6.QtWidgets import QFileDialog, QApplication
+from PyQt6.QtWidgets import QFileDialog, QApplication, QMessageBox
 from pathlib import Path
 
 os.environ["QT_QUICK_CONTROLS_STYLE"] = "Material"
@@ -283,14 +283,17 @@ class Core(QObject):
 
     def on_convert_finished(self, success, message):
         self.hideProgressDialog.emit(message)
-
-    def on_finished(self, success, message):
-        if self.worker:
-            self.worker.quit()
-            self.worker.wait()
-            self.worker = None
-            thread = threading.Thread(target=lambda: asyncio.run(self.audio_convert(message)), daemon=True)
-            thread.start()
+        if success:
+            if os.path.exists(self.savePath):
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Icon.Question)
+                msg.setText("要删除原无损音频文件吗? ")
+                msg.setStandardButtons(QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel)
+                msg.button(QMessageBox.StandardButton.Ok).setText("删除") # type: ignore
+                msg.button(QMessageBox.StandardButton.Cancel).setText("保留") # type: ignore
+                retval = msg.exec()
+                if retval == QMessageBox.StandardButton.Ok:
+                    os.remove(self.savePath)
 
 def resource_path(relative_path):
     base_path = getattr(sys, '_MEIPASS', os.path.abspath("."))
