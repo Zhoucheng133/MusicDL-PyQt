@@ -58,6 +58,88 @@ class DownloadWorker(QThread):
         except Exception as e:
             self.finished.emit(False, f"下载出错: {str(e)}")
 
+class ConvertWorker(QThread):
+    finished = pyqtSignal(bool, str)
+
+    def __init__(self, savePath, ls, index):
+        super().__init__()
+        self.savePath = savePath
+        self.index = index
+        self.list = ls
+
+    def get_ffmpeg_path(self):
+        if getattr(sys, 'frozen', False):
+            base_path = sys._MEIPASS  # type: ignore
+        else:
+            base_path = os.path.dirname(os.path.abspath(__file__))
+
+        ffmpeg_bin="ffmpeg"
+
+        if sys.platform == 'win32':
+            ffmpeg_bin = os.path.join(base_path, "ffmpeg", "win", "ffmpeg.exe")
+        elif sys.platform == 'darwin':
+            ffmpeg_bin = os.path.join(base_path, "ffmpeg", "mac", "ffmpeg")
+
+        return ffmpeg_bin
+
+    def run(self):
+        current_item = self.list[self.index]
+        directory = os.path.dirname(self.savePath)
+
+        new_name = f"{current_item['artist']}-{current_item['name']}.mp3"
+        new_name = "".join([c for c in new_name if c not in r'\/:*?"<>|'])
+
+        final_path = os.path.join(directory, new_name)
+        temp_output = os.path.join(directory, "temp_processing.mp3")
+
+        ffmpeg_exe = self.get_ffmpeg_path()
+
+        cmd = [
+            ffmpeg_exe, '-y',
+            '-i', self.savePath,
+            '-i', current_item['cover'],
+            '-map', '0:a',
+            '-map', '1:0',
+            '-c:a', 'libmp3lame',
+            '-b:a', '320k',
+            '-metadata', f"title={current_item['name']}",
+            '-metadata', f"artist={current_item['artist']}",
+            '-metadata', f"album={current_item['album']}",
+            '-id3v2_version', '3',
+            '-metadata:s:v', 'title=Album cover',
+            '-metadata:s:v', 'comment=Cover (front)',
+            temp_output
+        ]
+        try:
+            import subprocess
+            startupinfo = None
+            if sys.platform == "win32":
+                startupinfo = subprocess.STARTUPINFO()
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+
+            process = subprocess.run(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                startupinfo=startupinfo,
+                text=True,
+                encoding='utf-8',
+                errors='ignore'
+            )
+
+            if process.returncode == 0:
+                if os.path.exists(final_path):
+                    os.remove(final_path)
+                os.rename(temp_output, final_path)
+                self.finished.emit(True, f"转换成功: {final_path}")
+            else:
+                self.finished.emit(False, f"FFmpeg 错误: {process.stderr}")
+
+        except Exception as e:
+            if os.path.exists(temp_output):
+                os.remove(temp_output)
+            self.finished.emit(False, f"转换出错: {str(e)}")
+
 class Core(QObject):
     listChanged = pyqtSignal()
     searchError = pyqtSignal(str)
@@ -75,7 +157,8 @@ class Core(QObject):
         self.list=[]
         self.data_ready.connect(self.on_search_ok)
 
-        self.worker = None
+        self.downloadWorker = None
+        self.convertWorker = None
 
     @QtCore.pyqtProperty(list, notify=listChanged) # type: ignore
     def searchResult(self):
@@ -91,12 +174,14 @@ class Core(QObject):
     # 测试代码
     def do_search_test(self, keyword, server):
         import time
-        time.sleep(2)
+        # time.sleep(2)
         local_list = [
             {
                 "name": "test1",
                 "artist": "test2",
-                "url": "https://music.163.com/song/media/outer/url?id=138654.mp3",
+                "url": "http://127.0.0.1:8000/saji-星のオーケストラ.flac",
+                "cover": "http://127.0.0.1:8000/cover.png",
+                "album": "test3"
             },
             {
                 "name": "test3",
@@ -164,7 +249,7 @@ class Core(QObject):
             f"Files (*{ext});;All Files (*)"
         )
 
-        # 如果用户点击了取消，则不进行后续操作
+        # 取消=>不进行后续操作
         if not file_path:
             return
 
@@ -172,77 +257,31 @@ class Core(QObject):
 
         self.showProgressDialog.emit()
 
-        self.worker = DownloadWorker(url, file_path)
-        self.worker.progressChanged.connect(self.updateProgress.emit)
-        self.worker.finished.connect(self.on_finished)
-        self.worker.start()
+        self.downloadWorker = DownloadWorker(url, file_path)
+        self.downloadWorker.progressChanged.connect(self.updateProgress.emit)
+        self.downloadWorker.finished.connect(self.on_finished)
+        self.downloadWorker.start()
 
     @pyqtSlot()
     def cancel_download(self):
-        if self.worker:
-            self.worker.cancel()
+        if self.downloadWorker:
+            self.downloadWorker.cancel()
 
-    def get_ffmpeg_path(self):
-        if getattr(sys, 'frozen', False):
-            base_path = sys._MEIPASS # type: ignore
-        else:
-            base_path = os.path.dirname(os.path.abspath(__file__))
-        
-        if sys.platform == 'win32':
-            ffmpeg_bin = os.path.join(base_path, "ffmpeg", "win", "ffmpeg.exe")
-        elif sys.platform == 'darwin':
-            ffmpeg_bin = os.path.join(base_path, "ffmpeg", "mac", "ffmpeg")
+    def on_finished(self, success, message):
+        if self.downloadWorker:
+            self.downloadWorker.quit()
+            self.downloadWorker.wait()
+            self.downloadWorker = None
 
-        return ffmpeg_bin
+        if not success:
+            self.hideProgressDialog.emit(message)
+            return
 
-    async def audio_convert(self, message):
-        current_item = self.list[self.index]
-        directory = os.path.dirname(self.savePath)
+        self.convertWorker = ConvertWorker(savePath=self.savePath, ls=self.list, index=self.index)
+        self.convertWorker.finished.connect(self.on_convert_finished)
+        self.convertWorker.start()
 
-        new_name = f"{current_item['artist']}-{current_item['name']}.mp3"
-        new_name = "".join([c for c in new_name if c not in r'\/:*?"<>|'])
-
-        final_path = os.path.join(directory, new_name)
-        temp_output = os.path.join(directory, "temp_processing.mp3")
-
-        ffmpeg_exe = self.get_ffmpeg_path()
-
-        cmd = [
-            ffmpeg_exe, '-y',
-            '-i', self.savePath,
-            '-i', current_item['cover'],
-            '-map', '0:a',
-            '-map', '1:0',
-            '-c:a', 'libmp3lame',
-            '-b:a', '320k',
-            '-metadata', f"title={current_item['name']}",
-            '-metadata', f"artist={current_item['artist']}",
-            '-metadata', f"album={current_item['album']}",
-            '-id3v2_version', '3',
-            '-metadata:s:v', 'title=Album cover',
-            '-metadata:s:v', 'comment=Cover (front)',
-            temp_output
-        ]
-        try:
-            CREATE_NO_WINDOW = 0x08000000
-            process = await asyncio.create_subprocess_exec(
-                *cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-                creationflags=CREATE_NO_WINDOW
-            )
-            _, __ = await process.communicate()
-
-            if process.returncode == 0:
-                if os.path.exists(final_path):
-                    os.remove(final_path)
-
-                os.rename(temp_output, final_path)
-
-        except Exception as e:
-            if os.path.exists(temp_output):
-                os.remove(temp_output)
-
+    def on_convert_finished(self, success, message):
         self.hideProgressDialog.emit(message)
 
     def on_finished(self, success, message):
