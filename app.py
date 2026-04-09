@@ -2,9 +2,7 @@ import os
 import sys
 import threading
 
-import asyncio
 import requests
-import platform
 from PyQt6 import QtCore
 from PyQt6.QtCore import QUrl, QObject, pyqtSlot, pyqtSignal, QThread
 from PyQt6.QtGui import QIcon
