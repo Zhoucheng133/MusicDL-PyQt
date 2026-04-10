@@ -15,6 +15,7 @@ ApplicationWindow {
 
     Material.primary: Material.Teal
     Material.accent: Material.Teal
+    Material.theme: themeManager.is_dark_mode ? Material.Dark : Material.Light
 
     property bool loading: false;
 

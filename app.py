@@ -4,8 +4,8 @@ import threading
 
 import requests
 from PyQt6 import QtCore
-from PyQt6.QtCore import QUrl, QObject, pyqtSlot, pyqtSignal, QThread
-from PyQt6.QtGui import QIcon
+from PyQt6.QtCore import QUrl, QObject, pyqtSlot, pyqtSignal, QThread, Qt
+from PyQt6.QtGui import QIcon, QGuiApplication
 from PyQt6.QtQml import QQmlApplicationEngine
 from musicdl import musicdl
 from PyQt6.QtWidgets import QFileDialog, QApplication, QMessageBox
@@ -293,6 +293,21 @@ class Core(QObject):
                 if retval == QMessageBox.StandardButton.Ok:
                     os.remove(self.savePath)
 
+class ThemeManager(QObject):
+    themeChanged = pyqtSignal()
+
+    def __init__(self):
+        super().__init__()
+        self._style_hints = QGuiApplication.styleHints()
+        self._style_hints.colorSchemeChanged.connect(self.on_theme_changed) # type: ignore
+
+    def on_theme_changed(self):
+        self.themeChanged.emit()
+
+    @QtCore.pyqtProperty(bool, notify=themeChanged) # type: ignore
+    def is_dark_mode(self):
+        return self._style_hints.colorScheme() == Qt.ColorScheme.Dark # type: ignore
+
 def resource_path(relative_path):
     base_path = getattr(sys, '_MEIPASS', os.path.abspath("."))
     return os.path.join(base_path, relative_path)
@@ -303,8 +318,10 @@ if __name__ == "__main__":
         app.setWindowIcon(QIcon(resource_path("assets/icon.ico")))
 
     core = Core()
+    theme_manager = ThemeManager()
     engine = QQmlApplicationEngine()
     engine.rootContext().setContextProperty("core", core) # type: ignore
+    engine.rootContext().setContextProperty("themeManager", theme_manager) # type: ignore
 
     target_qml = get_qml_path("main.qml")
     engine.load(QUrl.fromLocalFile(target_qml))
