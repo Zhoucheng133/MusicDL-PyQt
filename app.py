@@ -282,7 +282,7 @@ class Core(QObject):
     def on_convert_finished(self, success, message):
         self.hideProgressDialog.emit(message)
         if success:
-            if os.path.exists(self.savePath):
+            if os.path.isfile(self.savePath) and not self.savePath.lower().endswith(".mp3"):
                 msg = QMessageBox()
                 msg.setIcon(QMessageBox.Icon.Question)
                 msg.setText("要删除原无损音频文件吗? ")
