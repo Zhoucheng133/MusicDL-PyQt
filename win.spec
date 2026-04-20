@@ -4,7 +4,7 @@
 a = Analysis(
     ['app.py'],
     datas=[
-        ('views/main.qml', 'views')
+        ('views/main.qml', 'views'),
         ('assets/icon.ico', 'assets')
     ],
     pathex=[],
