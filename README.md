@@ -8,8 +8,8 @@
 
 基于[musicdl](https://github.com/CharlesPikachu/musicdl)的GUI程序，使用PyQt6开发
 
-这个仓库是基于PyQt的版本，另有基于Tauri的版本  
-[Tauri ver.](https://github.com/Zhoucheng133/MusicDL-GUI) | ★ PyQt ver.
+这个仓库是基于PyQt的桌面端版本，另有基于Tauri的桌面端版本和使用Docker部署的Web版本  
+[Tauri ver.](https://github.com/Zhoucheng133/MusicDL-GUI) | ★ PyQt ver. | [Web ver.](https://github.com/Zhoucheng133/MusicDL-Web)
 
 ## 功能
 
