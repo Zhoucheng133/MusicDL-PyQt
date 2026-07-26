@@ -27,7 +27,7 @@ MarkupSafe==3.0.3
 mdurl==0.1.2
 more-itertools==11.0.1
 mpmath==1.3.0
-musicdl==2.10.2
+musicdl==2.13.3
 mutagen==1.47.0
 networkx==3.6.1
 nodejs-wheel==24.14.1
